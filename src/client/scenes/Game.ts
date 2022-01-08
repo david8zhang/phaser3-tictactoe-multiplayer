@@ -33,6 +33,16 @@ export default class Game extends Phaser.Scene {
         .on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
           this.server?.makeSelection(index)
         })
+      switch (cellState) {
+        case Cell.X: {
+          this.add.star(cell.x, cell.y, 4, 4, 64, 0xff0000).setAngle(45)
+          break
+        }
+        case Cell.O: {
+          this.add.circle(cell.x, cell.y, 50, 0x0000ff)
+          break
+        }
+      }
       this.cells.push({
         display: cell,
         value: cellState,
@@ -44,14 +54,28 @@ export default class Game extends Phaser.Scene {
       }
     })
     this.server?.onBoardChanged(this.handleBoardChanged, this)
+    this.server?.onPlayerTurnChanged(this.handlePlayerTurnChanged, this)
   }
 
   private handleBoardChanged(board: Cell[]) {
     for (let i = 0; i < board.length; i++) {
       const cell = this.cells[i]
-      if (cell.value !== board[i]) {
-        this.add.star(cell.display.x, cell.display.y, 4, 4, 64, 0xff0000).setAngle(45)
+      const newValue = board[i]
+      if (cell.value !== newValue) {
+        switch (newValue) {
+          case Cell.X: {
+            this.add.star(cell.display.x, cell.display.y, 4, 4, 64, 0xff0000).setAngle(45)
+            break
+          }
+          case Cell.O: {
+            this.add.circle(cell.display.x, cell.display.y, 50, 0x0000ff)
+            break
+          }
+        }
+        cell.value = newValue
       }
     }
   }
+
+  private handlePlayerTurnChanged(playerIndex: number) {}
 }

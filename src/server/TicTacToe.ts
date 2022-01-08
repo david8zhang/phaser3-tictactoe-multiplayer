@@ -15,7 +15,10 @@ export class TicTacToe extends Room<TicTacToeState> {
       })
     })
   }
-  onJoin(client: Client, options: any) {}
+  onJoin(client: Client, options: any) {
+    const idx = this.clients.findIndex((c) => c.sessionId == client.sessionId)
+    client.send(Message.PlayerIndex, { playerIndex: idx })
+  }
   onLeave(client: Client, connected: boolean) {}
   onDispose() {}
 }
