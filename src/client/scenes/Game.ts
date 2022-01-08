@@ -55,6 +55,7 @@ export default class Game extends Phaser.Scene {
     })
     this.server?.onBoardChanged(this.handleBoardChanged, this)
     this.server?.onPlayerTurnChanged(this.handlePlayerTurnChanged, this)
+    this.server?.onPlayerWon(this.handlePlayerWon, this)
   }
 
   private handleBoardChanged(board: Cell[]) {
@@ -77,5 +78,14 @@ export default class Game extends Phaser.Scene {
     }
   }
 
-  private handlePlayerTurnChanged(playerIndex: number) {}
+  private handlePlayerTurnChanged(playerIndex: number) {
+    // TODO: Show message letting player know it is their turn
+  }
+  private handlePlayerWon(playerIndex: number) {
+    if (this.server?.playerIndex == playerIndex) {
+      console.log('you won!')
+    } else {
+      console.log('you lost')
+    }
+  }
 }

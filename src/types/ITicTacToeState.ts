@@ -9,6 +9,7 @@ export enum Cell {
 export interface ITicTacToeState {
   board: ArraySchema<number>
   activePlayer: number
+  winningPlayer: number
 }
 
 export default ITicTacToeState

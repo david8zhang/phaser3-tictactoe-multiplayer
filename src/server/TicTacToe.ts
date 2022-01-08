@@ -7,6 +7,7 @@ import PlayerSelectionCommand from './commands/PlayerSelectionCommands'
 export class TicTacToe extends Room<TicTacToeState> {
   private dispatcher = new Dispatcher(this)
   onCreate(options: any) {
+    this.maxClients = 2
     this.setState(new TicTacToeState())
     this.onMessage(Message.PlayerSelection, (client, message) => {
       this.dispatcher.dispatch(new PlayerSelectionCommand(), {

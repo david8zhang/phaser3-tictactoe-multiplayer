@@ -8,6 +8,9 @@ export default class TicTacToeState extends Schema implements ITicTacToeState {
   @type('number')
   activePlayer = 0
 
+  @type('number')
+  winningPlayer = -1
+
   constructor() {
     super()
     this.board = new ArraySchema(0, 0, 0, 0, 0, 0, 0, 0, 0)
