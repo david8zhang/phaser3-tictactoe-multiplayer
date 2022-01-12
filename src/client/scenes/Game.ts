@@ -1,17 +1,23 @@
 import type Server from '../services/Server'
 import Phaser from 'phaser'
-import ITicTacToeState, { Cell } from '../../types/ITicTacToeState'
+import ITicTacToeState, { Cell, GameState } from '../../types/ITicTacToeState'
+import { IGameOverSceneData, IGameSceneData } from '~/types/scenes'
 
 export default class Game extends Phaser.Scene {
   private server?: Server
+  private onGameOver?: (data: IGameOverSceneData) => void
   private cells: { display: Phaser.GameObjects.Rectangle; value: Cell }[] = []
+
+  private gameStateText?: Phaser.GameObjects.Text
+
   constructor() {
     super('game')
   }
 
-  async create(data: { server: Server }) {
-    const { server } = data
+  async create(data: IGameSceneData) {
+    const { server, onGameOver } = data
     this.server = server
+    this.onGameOver = onGameOver
     if (!this.server) {
       throw new Error('server instance missing')
     }
@@ -53,9 +59,17 @@ export default class Game extends Phaser.Scene {
         x = width * 0.5 - size
       }
     })
+
+    if (this.server?.gameState === GameState.WaitingForPlayers) {
+      const width = this.scale.width
+      this.gameStateText = this.add.text(width * 0.5, 50, 'Waiting for opponent...').setOrigin(0.5)
+    }
+
     this.server?.onBoardChanged(this.handleBoardChanged, this)
     this.server?.onPlayerTurnChanged(this.handlePlayerTurnChanged, this)
     this.server?.onPlayerWon(this.handlePlayerWon, this)
+    this.server?.onGameStateChanged(this.handleGameStateChanged, this)
+    this.server?.onTie(this.handleTie, this)
   }
 
   private handleBoardChanged(board: Cell[]) {
@@ -81,11 +95,33 @@ export default class Game extends Phaser.Scene {
   private handlePlayerTurnChanged(playerIndex: number) {
     // TODO: Show message letting player know it is their turn
   }
+
+  private handleTie() {
+    console.log('Went here!')
+    this.time.delayedCall(1000, () => {
+      if (this.onGameOver) {
+        this.onGameOver({
+          isTie: true,
+        })
+      }
+    })
+  }
+
   private handlePlayerWon(playerIndex: number) {
-    if (this.server?.playerIndex == playerIndex) {
-      console.log('you won!')
-    } else {
-      console.log('you lost')
+    this.time.delayedCall(1000, () => {
+      if (!this.onGameOver) {
+        return
+      }
+      this.onGameOver({
+        winner: this.server?.playerIndex === playerIndex,
+      })
+    })
+  }
+
+  private handleGameStateChanged(state: GameState) {
+    if (state == GameState.Playing && this.gameStateText) {
+      this.gameStateText.destroy()
+      this.gameStateText = undefined
     }
   }
 }

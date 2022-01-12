@@ -2,7 +2,7 @@ import { Client, Room } from 'colyseus.js'
 import { Schema } from '@colyseus/schema'
 import Phaser from 'phaser'
 import { Message } from '../../types/messages'
-import ITicTacToeState from '../../types/ITicTacToeState'
+import ITicTacToeState, { GameState } from '../../types/ITicTacToeState'
 
 export default class Server {
   private client: Client
@@ -17,6 +17,13 @@ export default class Server {
 
   get playerIndex() {
     return this._playerIndex
+  }
+
+  get gameState() {
+    if (!this.room) {
+      return GameState.WaitingForPlayers
+    }
+    return this.room?.state.gameState
   }
 
   async join() {
@@ -38,6 +45,7 @@ export default class Server {
     this.room.state.onChange = (changes) => {
       changes.forEach((change) => {
         const { field, value } = change
+        console.log(field)
         switch (field) {
           case 'activePlayer': {
             this.events.emit('player-turn-changed', value)
@@ -47,15 +55,33 @@ export default class Server {
             this.events.emit('player-win', value)
             break
           }
+          case 'isTie': {
+            this.events.emit('tie', value)
+            break
+          }
+          case 'gameState': {
+            this.events.emit('game-state-changed', value)
+            break
+          }
         }
       })
     }
+  }
+
+  leave() {
+    this.room?.leave()
+    this.events.removeAllListeners()
   }
 
   makeSelection(index: number) {
     if (!this.room) {
       return
     }
+
+    if (this.room.state.gameState !== GameState.Playing) {
+      return
+    }
+
     if (this.playerIndex !== this.room.state.activePlayer) {
       console.warn("not this player's turn!")
       return
@@ -77,5 +103,13 @@ export default class Server {
 
   onPlayerWon(cb: (playerIndex: number) => void, context?: any) {
     this.events.on('player-win', cb, context)
+  }
+
+  onTie(cb: () => void, context?: any) {
+    this.events.on('tie', cb, context)
+  }
+
+  onGameStateChanged(cb: (state: GameState) => void, context?: any) {
+    this.events.on('game-state-changed', cb, context)
   }
 }

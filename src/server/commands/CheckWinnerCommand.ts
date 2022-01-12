@@ -1,14 +1,7 @@
 import { Command } from '@colyseus/command'
-import { Client } from 'colyseus'
 import ITicTacToeState, { Cell } from '../../types/ITicTacToeState'
-import NextTurnCommand from './NextTurnCommand'
-
-type Payload = {}
-
-const getValueAt = (board: number[], row: number, col: number) => {
-  const idx = row * 3 + col
-  return board[idx]
-}
+import { getValueAt } from '../utils'
+import CheckTieCommand from './CheckTieCommand'
 
 const wins = [
   // Row wins
@@ -54,7 +47,7 @@ const wins = [
   [
     { row: 0, col: 2 },
     { row: 1, col: 1 },
-    { row: 0, col: 2 },
+    { row: 2, col: 0 },
   ],
 ]
 
@@ -79,12 +72,13 @@ export default class CheckWinnerCommand extends Command<ITicTacToeState> {
     }
     return false
   }
+
   execute() {
     const win = this.determineWin()
     if (win) {
       this.state.winningPlayer = this.state.activePlayer
     } else {
-      return [new NextTurnCommand()]
+      return [new CheckTieCommand()]
     }
   }
 }
